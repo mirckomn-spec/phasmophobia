@@ -298,6 +298,25 @@ export const GHOSTS: Ghost[] = [
     identificationStrategies: ["Teste sal e crucifix", "Observe mudança pós-caça"],
     advancedTips: ["Use salt early para enfraquecer depois."],
   }),
+  g("kormos", "Kormos", "Fantasma cego com audição extrema — caça pelo som, não pela visão.", ["Orbe Fantasma", "Spirit Box", "Ultravioleta"], {
+    huntSanity: "50% (70% se sprintar no quarto do fantasma)",
+    strengths: ["Audição muito forte", "Detecta movimento e eletrônicos à distância", "Acelera ao detectar jogador"],
+    weaknesses: ["Quase cego", "Ignora quem fica parado e em silêncio"],
+    specialBehaviors: ["Sem line-of-sight", "Passa por jogadores imóveis e silenciosos", "Mesmas evidências que Mimic"],
+    huntTest: "Durante caça: fique imóvel no corredor — se passar direto, provável Kormos.",
+    abilityChance: "Detecção sonora contínua",
+    identificationStrategies: ["Teste silêncio total na caça", "Descarte Mimic (orbe falso + Freezing)"],
+    advancedTips: ["Não se mova no armário — Kormos ouve passos agachados.", "Sprint no quarto pode forçar caça a 70% sanidade."],
+  }),
+  g("aswang", "Aswang", "Predador focado em perseguição com aceleração rápida em line-of-sight.", ["Temperatura Congelante", "Escrita Fantasma", "D.O.T.S Projector"], {
+    strengths: ["Acelera ao LOS mais rápido que outros fantasmas (~17s ao máximo)", "Foco em perseguir"],
+    weaknesses: ["Mais lento no início da caça", "Não mata em esconderijos oficiais (caça termina)"],
+    specialBehaviors: ["LOS acceleration acelerada", "Hunt ends se detectar jogador em hiding spot válido"],
+    huntTest: "Mantenha LOS na caça — velocidade sobe mais rápido que fantasmas normais.",
+    abilityChance: "LOS max speed em ~17.33s",
+    identificationStrategies: ["Cronometre aceleração com LOS", "Teste hiding spot oficial"],
+    advancedTips: ["Perseguições longas são perigosas.", "Compare com Revenant — Aswang não acelera sem LOS."],
+  }),
 ];
 
 export const EVIDENCE_OPTIONS = [

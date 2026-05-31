@@ -114,6 +114,46 @@ export async function resetMatches(): Promise<void> {
   await db.collection("matches").deleteMany({});
 }
 
+export async function updateMatchGhostType(
+  matchId: string,
+  ghostType: string
+): Promise<boolean> {
+  const db = await getDb();
+  const result = await db.collection("matches").updateOne(
+    { _id: new ObjectId(matchId) },
+    { $set: { ghost_type: ghostType } }
+  );
+  return result.modifiedCount > 0;
+}
+
+export async function updateMatchGhostByFilter(
+  filter: { ghost_type: string; won?: boolean; created_at_contains?: string },
+  newGhostType: string
+): Promise<number> {
+  const db = await getDb();
+  const docs = await db
+    .collection<MatchDoc>("matches")
+    .find({ ghost_type: filter.ghost_type, ...(filter.won !== undefined ? { won: filter.won } : {}) })
+    .sort({ created_at: -1 })
+    .toArray();
+
+  const matches = docs.filter((doc) => {
+    if (!filter.created_at_contains) return true;
+    return doc.created_at?.includes(filter.created_at_contains);
+  });
+
+  if (matches.length === 0) return 0;
+
+  const target = matches[0];
+  if (!target._id) return 0;
+
+  const result = await db.collection("matches").updateOne(
+    { _id: new ObjectId(String(target._id)) },
+    { $set: { ghost_type: newGhostType } }
+  );
+  return result.modifiedCount;
+}
+
 export async function addInvestigationMinutes(minutes: number): Promise<void> {
   const db = await getDb();
   await db.collection("settings").updateOne(
