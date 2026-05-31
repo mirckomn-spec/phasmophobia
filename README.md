@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Naltic & Neat
 
-## Getting Started
+Monumento digital dedicado aos dois maiores investigadores paranormais da atualidade.
 
-First, run the development server:
+## Executar
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Design
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Identidade visual minimalista em preto, branco e cinza. Tipografia exclusiva Poppins (ExtraBold, Bold, SemiBold) da pasta `/fontes`.
 
-## Learn More
+## Rotas
 
-To learn more about Next.js, take a look at the following resources:
+| Rota | Descrição |
+|------|-----------|
+| `/` | Home — Naltic & Neat como protagonistas |
+| `/investigadores` | Dossiês completos da dupla |
+| `/streak` | Win Streak e histórico |
+| `/ghosts` | Banco de entidades |
+| `/ghosts/[id]` | Dossiê de entidade |
+| `/tools` | Ferramentas de campo |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Dados
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Por padrão, dados salvos em `data/local-db.json`. Para Supabase, configure `.env.local` conforme `.env.local.example`.

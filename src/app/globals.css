@@ -1,26 +1,198 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Poppins ExtraBold";
+  src: url("/fontes/Poppins-ExtraBold/Poppins-ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Poppins Bold";
+  src: url("/fontes/Poppins-Bold/Poppins-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Poppins SemiBold";
+  src: url("/fontes/Poppins-SemiBold/Poppins-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --black: #000000;
+  --black-soft: #0a0a0a;
+  --surface: #111111;
+  --surface-elevated: #171717;
+  --white: #ffffff;
+  --gray-light: #d9d9d9;
+  --gray: #8a8a8a;
+  --accent-purple: #7c6aef;
+  --accent-purple-light: #c4b5fd;
+  --accent-cyan: #22d3ee;
+  --accent-rose: #e85d75;
+  --accent-gold: #fbbf24;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-black: var(--black);
+  --color-black-soft: var(--black-soft);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-white: var(--white);
+  --color-gray-light: var(--gray-light);
+  --color-gray: var(--gray);
+  --font-display: "Poppins ExtraBold", system-ui, sans-serif;
+  --font-heading: "Poppins Bold", system-ui, sans-serif;
+  --font-body: "Poppins SemiBold", system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-elevated) var(--black);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124, 106, 239, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(34, 211, 238, 0.04), transparent);
+}
+
+::selection {
+  background: var(--gray);
+  color: var(--white);
+}
+
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.font-body {
+  font-family: var(--font-body);
+  font-weight: 600;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gray);
+}
+
+.divider {
+  height: 1px;
+  background: var(--surface-elevated);
+  border: none;
+}
+
+.page-wrap {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 42rem;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.page-internal {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 72rem;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.page-internal-wide {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80rem;
+  padding: 2.5rem 2rem 4rem;
+}
+
+@media (min-width: 1024px) {
+  .page-internal,
+  .page-internal-wide {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+.title-page-internal {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1.1;
+  color: var(--white);
+}
+
+.card-panel {
+  border: 1px solid var(--surface-elevated);
+  background: linear-gradient(160deg, rgba(17, 17, 17, 0.95), rgba(10, 10, 10, 0.98));
+  padding: 1.75rem;
+}
+
+@media (min-width: 1024px) {
+  .card-panel {
+    padding: 2.25rem 2.5rem;
+  }
+}
+
+.title-page {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  line-height: 1.15;
+  color: var(--white);
+}
+
+.title-section {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  line-height: 1.2;
+  color: var(--white);
+}
+
+.title-hero {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 0.95;
+  color: var(--white);
+}
+
+.fade-in {
+  animation: fade-in 0.6s ease forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
