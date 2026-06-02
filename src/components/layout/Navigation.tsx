@@ -24,7 +24,7 @@ export function Navigation({ session }: NavigationProps) {
   if (pathname === "/login") return null;
 
   const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
     router.push("/login");
     router.refresh();
   };

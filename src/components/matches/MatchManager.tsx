@@ -69,13 +69,22 @@ export function MatchManager({
   const [message, setMessage] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const res = await fetch("/api/matches");
+    const res = await fetch("/api/matches", { credentials: "same-origin" });
+    if (!res.ok) return;
     const data = await res.json();
+    if (!data.stats) return;
     setStats(data.stats);
     setMatches(data.matches);
     setPlayers(data.players);
     setPending(data.pending ?? null);
   }, []);
+
+  const readApiError = (data: { error?: string }, status: number) => {
+    if (status === 401) return "Sessão expirada. Faça login novamente.";
+    if (status >= 500) return "Erro no servidor. Tente novamente.";
+    if (typeof data.error === "string" && data.error.length < 120) return data.error;
+    return "Não foi possível concluir a ação.";
+  };
 
   useEffect(() => {
     const interval = setInterval(refresh, 4000);
@@ -92,14 +101,18 @@ export function MatchManager({
       const res = await fetch("/api/matches/pending", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({ type, ...payload }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erro ao propor ação");
+      if (!res.ok) {
+        setMessage(readApiError(data, res.status));
+        return;
+      }
       setPending(data.pending);
       setMessage("Você confirmou. Aguardando confirmação do parceiro.");
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Erro ao propor ação");
+    } catch {
+      setMessage("Não foi possível propor a ação.");
     } finally {
       setLoading(false);
     }
@@ -112,9 +125,13 @@ export function MatchManager({
     try {
       const res = await fetch(`/api/matches/pending/${pending.id}/confirm`, {
         method: "POST",
+        credentials: "same-origin",
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erro ao confirmar");
+      if (!res.ok) {
+        setMessage(readApiError(data, res.status));
+        return;
+      }
 
       if (data.executed) {
         setStats(data.stats);
@@ -126,8 +143,8 @@ export function MatchManager({
         setPending(data.pending);
         setMessage("Você confirmou. Aguardando confirmação do parceiro.");
       }
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Erro ao confirmar");
+    } catch {
+      setMessage("Não foi possível confirmar a ação.");
     } finally {
       setLoading(false);
     }
@@ -140,13 +157,17 @@ export function MatchManager({
     try {
       const res = await fetch(`/api/matches/pending?id=${pending.id}`, {
         method: "DELETE",
+        credentials: "same-origin",
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erro ao cancelar");
+      if (!res.ok) {
+        setMessage(readApiError(data, res.status));
+        return;
+      }
       setPending(null);
       setMessage("Proposta cancelada.");
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Erro ao cancelar");
+    } catch {
+      setMessage("Não foi possível cancelar a ação.");
     } finally {
       setLoading(false);
     }

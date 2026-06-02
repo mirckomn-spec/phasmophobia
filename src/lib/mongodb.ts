@@ -19,14 +19,7 @@ declare global {
 function getUri(): string {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    throw new Error("MONGODB_URI não configurada em .env.local");
-  }
-
-  if (uri.startsWith("mongodb+srv://")) {
-    console.warn(
-      "[mongodb] URI mongodb+srv detectada. Em algumas redes Windows ocorre querySrv ECONNREFUSED. " +
-        "Use a connection string padrão do Atlas (Connect → Drivers → Standard)."
-    );
+    throw new Error("Configuração do banco indisponível");
   }
 
   return uri;

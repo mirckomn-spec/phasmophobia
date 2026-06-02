@@ -1,84 +1,78 @@
-import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
 import {
   cancelPendingAction,
-  confirmPendingAction,
   createPendingAction,
   getActivePendingAction,
 } from "@/lib/pending-actions";
 import type { MatchPayload, PendingActionType } from "@/lib/types";
+import { apiError, apiJson, handleApiFailure, requireApiSession } from "@/lib/api-security";
 
 export async function GET() {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+  const auth = await requireApiSession();
+  if (auth.response) return auth.response;
 
+  try {
     const pending = await getActivePendingAction();
-    return NextResponse.json({ pending });
+    return apiJson({ pending });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Erro ao buscar pendências" },
-      { status: 500 }
-    );
+    return handleApiFailure(error, "Não foi possível carregar pendências.");
   }
 }
 
 export async function POST(request: Request) {
+  const auth = await requireApiSession();
+  if (auth.response) return auth.response;
+
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return apiError("Dados inválidos", 400);
     }
 
-    const body = await request.json();
     const type = body.type as PendingActionType;
-
     if (!["add_match", "remove_last", "reset_all"].includes(type)) {
-      return NextResponse.json({ error: "Tipo de ação inválido" }, { status: 400 });
+      return apiError("Tipo de ação inválido", 400);
     }
 
     let payload: MatchPayload | null = null;
     if (type === "add_match") {
       payload = {
-        ghost_type: body.ghost_type ?? null,
-        difficulty: body.difficulty ?? null,
+        ghost_type: typeof body.ghost_type === "string" ? body.ghost_type : null,
+        difficulty: typeof body.difficulty === "string" ? body.difficulty : null,
         won: Boolean(body.won),
         naltic_survived: Boolean(body.naltic_survived),
         neat_survived: Boolean(body.neat_survived),
       };
     }
 
-    const pending = await createPendingAction(type, session.username, payload);
-    return NextResponse.json({ pending });
+    const pending = await createPendingAction(type, auth.session.username, payload);
+    return apiJson({ pending });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Erro ao propor ação" },
-      { status: 400 }
-    );
+    if (error instanceof Error && error.message.includes("aguardando confirmação")) {
+      return apiError(error.message, 409);
+    }
+    return handleApiFailure(error, "Não foi possível propor a ação.");
   }
 }
 
 export async function DELETE(request: Request) {
-  try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
-    }
+  const auth = await requireApiSession();
+  if (auth.response) return auth.response;
 
+  try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     if (!id) {
-      return NextResponse.json({ error: "ID da ação é obrigatório" }, { status: 400 });
+      return apiError("ID da ação é obrigatório", 400);
     }
 
-    await cancelPendingAction(id, session.username);
-    return NextResponse.json({ ok: true });
+    await cancelPendingAction(id, auth.session.username);
+    return apiJson({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Erro ao cancelar ação" },
-      { status: 400 }
-    );
+    if (error instanceof Error) {
+      return apiError(error.message, 400);
+    }
+    return handleApiFailure(error, "Não foi possível cancelar a ação.");
   }
 }

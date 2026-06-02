@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import {
   getEncounters,
   getMatches,
@@ -6,8 +5,12 @@ import {
   getStats,
 } from "@/lib/db";
 import { getActivePendingAction } from "@/lib/pending-actions";
+import { apiError, apiJson, handleApiFailure, requireApiSession } from "@/lib/api-security";
 
 export async function GET() {
+  const auth = await requireApiSession();
+  if (auth.response) return auth.response;
+
   try {
     const [matches, stats, players, encounters, pending] = await Promise.all([
       getMatches(),
@@ -16,31 +19,28 @@ export async function GET() {
       getEncounters(),
       getActivePendingAction(),
     ]);
-    return NextResponse.json({ matches, stats, players, encounters, pending });
+    return apiJson({ matches, stats, players, encounters, pending });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Erro ao buscar dados" },
-      { status: 500 }
-    );
+    return handleApiFailure(error, "Não foi possível carregar os dados.");
   }
 }
 
 export async function POST() {
-  return NextResponse.json(
-    {
-      error:
-        "Registro direto desativado. Proponha a partida e aguarde confirmação de Naltic e Neat.",
-    },
-    { status: 403 }
+  const auth = await requireApiSession();
+  if (auth.response) return auth.response;
+
+  return apiError(
+    "Use o fluxo de proposta com confirmação dupla para registrar partidas.",
+    403
   );
 }
 
 export async function DELETE() {
-  return NextResponse.json(
-    {
-      error:
-        "Remoção direta desativada. Proponha a remoção e aguarde confirmação de Naltic e Neat.",
-    },
-    { status: 403 }
+  const auth = await requireApiSession();
+  if (auth.response) return auth.response;
+
+  return apiError(
+    "Use o fluxo de proposta com confirmação dupla para remover partidas.",
+    403
   );
 }

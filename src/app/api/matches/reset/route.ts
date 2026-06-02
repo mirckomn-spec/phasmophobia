@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { apiError, requireApiSession } from "@/lib/api-security";
 
 export async function POST() {
-  return NextResponse.json(
-    {
-      error:
-        "Reset direto desativado. Proponha o reset e aguarde confirmação de Naltic e Neat.",
-    },
-    { status: 403 }
+  const auth = await requireApiSession();
+  if (auth.response) return auth.response;
+
+  return apiError(
+    "Use o fluxo de proposta com confirmação dupla para resetar o histórico.",
+    403
   );
 }

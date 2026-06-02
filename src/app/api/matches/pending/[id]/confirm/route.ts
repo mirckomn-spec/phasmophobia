@@ -1,20 +1,21 @@
-import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
-import { getStats, getPlayerStats, getMatches } from "@/lib/db";
+import { getMatches, getPlayerStats, getStats } from "@/lib/db";
 import { confirmPendingAction } from "@/lib/pending-actions";
+import { apiError, apiJson, handleApiFailure, requireApiSession } from "@/lib/api-security";
 
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireApiSession();
+  if (auth.response) return auth.response;
+
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+    const { id } = await params;
+    if (!id || id.length > 64) {
+      return apiError("Identificador inválido", 400);
     }
 
-    const { id } = await params;
-    const result = await confirmPendingAction(id, session.username);
+    const result = await confirmPendingAction(id, auth.session.username);
 
     const [stats, players, matches] = await Promise.all([
       getStats(),
@@ -22,7 +23,7 @@ export async function POST(
       getMatches(),
     ]);
 
-    return NextResponse.json({
+    return apiJson({
       executed: result.executed,
       pending: result.action,
       stats,
@@ -30,9 +31,9 @@ export async function POST(
       matches,
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Erro ao confirmar ação" },
-      { status: 400 }
-    );
+    if (error instanceof Error) {
+      return apiError(error.message, 400);
+    }
+    return handleApiFailure(error, "Não foi possível confirmar a ação.");
   }
 }
