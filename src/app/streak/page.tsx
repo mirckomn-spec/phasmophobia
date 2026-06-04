@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { MatchManager } from "@/components/matches/MatchManager";
 import { PageShell } from "@/components/layout/PageShell";
 import { getSession } from "@/lib/auth";

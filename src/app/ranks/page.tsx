@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { RanksOverview } from "@/components/ranks/RanksOverview";
 import { PageShell } from "@/components/layout/PageShell";
 import { getSession } from "@/lib/auth";

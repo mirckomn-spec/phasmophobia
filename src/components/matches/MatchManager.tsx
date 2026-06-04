@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { GHOSTS } from "@/data/ghosts";
 import { POINTS } from "@/lib/scoring";
 import { getRankProgress } from "@/lib/ranks";
@@ -56,6 +57,7 @@ export function MatchManager({
   initialPending,
   session,
 }: MatchManagerProps) {
+  const router = useRouter();
   const [stats, setStats] = useState(initialStats);
   const [matches, setMatches] = useState(initialMatches);
   const [players, setPlayers] = useState(initialPlayers);
@@ -69,7 +71,10 @@ export function MatchManager({
   const [message, setMessage] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const res = await fetch("/api/matches", { credentials: "same-origin" });
+    const res = await fetch("/api/matches", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
     if (!res.ok) return;
     const data = await res.json();
     if (!data.stats) return;
@@ -78,6 +83,22 @@ export function MatchManager({
     setPlayers(data.players);
     setPending(data.pending ?? null);
   }, []);
+
+  const applyMutationResult = useCallback(
+    (data: {
+      stats?: Stats;
+      matches?: Match[];
+      players?: PlayerStats[];
+      pending?: PendingAction | null;
+    }) => {
+      if (data.stats) setStats(data.stats);
+      if (data.matches) setMatches(data.matches);
+      if (data.players) setPlayers(data.players);
+      setPending(data.pending ?? null);
+      router.refresh();
+    },
+    [router]
+  );
 
   const readApiError = (data: { error?: string }, status: number) => {
     if (status === 401) return "Sessão expirada. Faça login novamente.";
@@ -134,10 +155,7 @@ export function MatchManager({
       }
 
       if (data.executed) {
-        setStats(data.stats);
-        setMatches(data.matches);
-        setPlayers(data.players);
-        setPending(null);
+        applyMutationResult(data);
         setMessage("Ação confirmada pelos dois — executada com sucesso.");
       } else {
         setPending(data.pending);

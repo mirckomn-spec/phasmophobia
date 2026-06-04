@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { InvestigatorProfileCard } from "@/components/investigators/InvestigatorProfileCard";
 import { PageShell } from "@/components/layout/PageShell";
 import { ACHIEVEMENTS, getUnlockedAchievements } from "@/lib/achievements";

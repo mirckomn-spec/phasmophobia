@@ -5,11 +5,46 @@ import type { GhostEncounter, Match, PlayerStats, Stats } from "./types";
 
 interface MatchDoc extends Omit<Match, "id"> {
   _id?: string;
+  stats_epoch?: number;
 }
 
 interface SettingsDoc {
   _id: string;
   total_investigation_minutes: number;
+  stats_epoch?: number;
+}
+
+async function getSettings(): Promise<SettingsDoc | null> {
+  const db = await getDb();
+  return db
+    .collection<SettingsDoc>("settings")
+    .findOne({ _id: "global" } as Record<string, string>);
+}
+
+async function getStatsEpoch(): Promise<number> {
+  const settings = await getSettings();
+  return settings?.stats_epoch ?? 0;
+}
+
+/** Nova época invalida partidas antigas nos cálculos, mesmo se ainda existirem no banco. */
+async function bumpStatsEpoch(): Promise<number> {
+  const db = await getDb();
+  const result = await db.collection<SettingsDoc>("settings").findOneAndUpdate(
+    { _id: "global" } as Record<string, string>,
+    {
+      $inc: { stats_epoch: 1 },
+      $setOnInsert: { total_investigation_minutes: 0 },
+    },
+    { upsert: true, returnDocument: "after" }
+  );
+  return result?.stats_epoch ?? 1;
+}
+
+function matchEpochFilter(epoch: number) {
+  if (epoch === 0) {
+    return { $or: [{ stats_epoch: 0 }, { stats_epoch: { $exists: false } }] };
+  }
+  return { stats_epoch: epoch };
 }
 
 function docToMatch(doc: MatchDoc & { _id: { toString(): string } }): Match {
@@ -36,18 +71,16 @@ function computeEncounters(matches: Match[]): GhostEncounter[] {
 }
 
 async function getInvestigationMinutes(): Promise<number> {
-  const db = await getDb();
-  const settings = await db
-    .collection("settings")
-    .findOne({ _id: "global" } as Record<string, string>);
-  return (settings as SettingsDoc | null)?.total_investigation_minutes ?? 0;
+  const settings = await getSettings();
+  return settings?.total_investigation_minutes ?? 0;
 }
 
 export async function getMatches(): Promise<Match[]> {
   const db = await getDb();
+  const epoch = await getStatsEpoch();
   const docs = await db
     .collection<MatchDoc>("matches")
-    .find({})
+    .find(matchEpochFilter(epoch))
     .sort({ created_at: -1 })
     .toArray();
 
@@ -80,6 +113,7 @@ export async function addMatch(payload: {
   neat_survived: boolean;
 }): Promise<Match> {
   const db = await getDb();
+  const epoch = await getStatsEpoch();
   const doc: MatchDoc = {
     ghost_type: payload.ghost_type ?? null,
     difficulty: payload.difficulty ?? null,
@@ -87,6 +121,7 @@ export async function addMatch(payload: {
     naltic_survived: payload.naltic_survived,
     neat_survived: payload.neat_survived,
     created_at: new Date().toISOString(),
+    stats_epoch: epoch,
   };
 
   const result = await db.collection<MatchDoc>("matches").insertOne(doc);
@@ -95,9 +130,10 @@ export async function addMatch(payload: {
 
 export async function removeLastMatch(): Promise<Match | null> {
   const db = await getDb();
+  const epoch = await getStatsEpoch();
   const last = await db
     .collection<MatchDoc & { _id: unknown }>("matches")
-    .find({})
+    .find(matchEpochFilter(epoch))
     .sort({ created_at: -1 })
     .limit(1)
     .next();
@@ -111,6 +147,7 @@ export async function removeLastMatch(): Promise<Match | null> {
 
 export async function resetMatches(): Promise<void> {
   const db = await getDb();
+  await bumpStatsEpoch();
   await db.collection("matches").deleteMany({});
 }
 
@@ -131,9 +168,14 @@ export async function updateMatchGhostByFilter(
   newGhostType: string
 ): Promise<number> {
   const db = await getDb();
+  const epoch = await getStatsEpoch();
   const docs = await db
     .collection<MatchDoc>("matches")
-    .find({ ghost_type: filter.ghost_type, ...(filter.won !== undefined ? { won: filter.won } : {}) })
+    .find({
+      ...matchEpochFilter(epoch),
+      ghost_type: filter.ghost_type,
+      ...(filter.won !== undefined ? { won: filter.won } : {}),
+    })
     .sort({ created_at: -1 })
     .toArray();
 
